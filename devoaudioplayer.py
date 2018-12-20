@@ -1,13 +1,21 @@
+import os
 from tkinter import *
 import tkinter.messagebox
 from tkinter import filedialog
 from pygame import mixer
 
-# https://www.flaticon.com/
 
-# Globals
-file_name = ""
-paused = False
+# https://www.flaticon.com/
+# https://icons8.com/
+
+# Current state
+state = {
+"file_name" : '', 
+'paused' : False,
+'playing' : False,
+"muted" : False,
+"previous_vol" : 50
+}
 
 
 root = Tk()
@@ -26,9 +34,9 @@ menuBar.add_cascade(label="File", menu=subMenu)
 
 
 def fileOpen():
-    global file_name
-    file_name = filedialog.askopenfilename()
-    print(file_name)
+    state['file_name'] = filedialog.askopenfilename()
+    play_music()
+    print(state['file_name'])
 
 
 # Add commands to the subMenu
@@ -61,18 +69,21 @@ text.pack(pady=10)
 
 
 def play_music():
-    global paused
     try:
-        if paused:
-            mixer.music.unpause()
-            paused = False
-            file_name_path = file_name.split('/')
-            statusbar['text'] = "Playing : " + file_name_path[-1]
-        else:
-            mixer.music.load(file_name)
+        if state['paused']:
+            # mixer.music.unpause()
+            state['paused'] = False
+            state['playing'] = True
             mixer.music.play()
-            file_name_path = file_name.split('/')
-            statusbar['text'] = "Playing : " + file_name_path[-1]
+            load_middle_buttons(state['playing'])
+            statusbar['text'] = "Playing : " + os.path.basename(state['file_name'])
+        else:
+            mixer.music.load(state['file_name'])
+            mixer.music.play()
+            statusbar['text'] = "Playing : " + os.path.basename(state['file_name'])
+            state['playing'] = True
+            load_middle_buttons(state['playing'])
+
     except:
         tkinter.messagebox.showerror(
             "Error", 
@@ -84,46 +95,110 @@ def play_music():
 def stop_music():
     mixer.music.stop()
     statusbar['text'] = "Stopped"
+    state['playing'] = False
+    load_middle_buttons(state['playing'])
 
 
 def pause_music():
-    global paused
-    if paused:
+    if not state['playing']:
+        pass
+    elif state['paused']:
         mixer.music.unpause()
-        paused = False
-        file_name_path = file_name.split('/')
-        statusbar['text'] = "Playing : " + file_name_path[-1]
+        state['paused'] = False
+        statusbar['text'] = "Playing : " + os.path.basename(state['file_name'])
     else:
         mixer.music.pause()
         statusbar['text'] = "Paused"
-        paused = True
+        state['paused'] = True
 
 
 def set_vol(vol):
     mixer.music.set_volume(int(vol) * .01)
+    if not state['muted']:
+        state['previous_vol'] = (int(vol) * .01) 
+
+    if mixer.music.get_volume() == 0:
+        vol_btn.configure(image=mutePhoto)
+    elif  mixer.music.get_volume() <= .33:
+        vol_btn.configure(image=softPhoto)
+    elif  mixer.music.get_volume() <= .66:
+        vol_btn.configure(image=mediumPhoto)
+    else:
+        vol_btn.configure(image=loudPhoto)
+    print("state.previous_vol is being set to : ", state['previous_vol'])
+    print("The state['muted'] is now: ", state['muted'])
+  
+    
+
+
+
+
+# Still flaky when muting. Sorta works now. 
+def mute():
+    if state['muted']:
+        mixer.music.set_volume(state['previous_vol'])
+        scale.set((state['previous_vol'] * 100))
+        state['muted'] = False
+        if state['previous_vol'] <= .33:
+            vol_btn.configure(image=softPhoto)
+        elif state['previous_vol'] <= .66:
+            vol_btn.configure(image=mediumPhoto)
+        else:
+            vol_btn.configure(image=loudPhoto)
+       
+            
+    else:
+        mixer.music.set_volume(0)
+        state['muted'] = True
+        print("state of previous vol is : ", state['previous_vol'])
+        scale.set(0)
+        print("state of previous vol after scale.set is : ", state['previous_vol'])
+        vol_btn.configure(image=mutePhoto)
+
+
+
 
 middle_frame = Frame(root)
-middle_frame.pack()
+middle_frame.pack(pady=15)
 
 playPhoto = PhotoImage(file='play.png')
 stopPhoto = PhotoImage(file='stop.png')
 pausePhoto = PhotoImage(file='pause.png')
-reloadPhoto = PhotoImage(file="reload.png")
+backPhoto = PhotoImage(file='back.png')
+mutePhoto = PhotoImage(file='mute.png')
+softPhoto = PhotoImage(file='soft.png')
+mediumPhoto = PhotoImage(file="medium.png")
+loudPhoto = PhotoImage(file='loud.png')
 
 
-playBtn = Button(middle_frame, image=playPhoto, command=play_music)
-playBtn.pack(side=LEFT, padx=10)
+def load_middle_buttons(playing):
+    if playing:
+        backBtn = Button(middle_frame, image=backPhoto, command=play_music)
+        backBtn.grid(row=0, column=0, padx=18)
+    else:
+        playBtn = Button(middle_frame, image=playPhoto, command=play_music)
+        playBtn.grid(row=0, column=0, padx=18)
 
-stopBtn = Button(middle_frame, image=stopPhoto, command=stop_music)
-stopBtn.pack(side=LEFT, padx=10)
+    stopBtn = Button(middle_frame, image=stopPhoto, command=stop_music)
+    stopBtn.grid(row=0, column=1, padx=18)
 
-pause_btn =Button(middle_frame, image=pausePhoto, command=pause_music)
-pause_btn.pack(side=LEFT, padx=10)
+    pause_btn =Button(middle_frame, image=pausePhoto, command=pause_music)
+    pause_btn.grid(row=0, column=2, padx=18)
 
-scale = Scale(root, from_=0, to=100, orient=HORIZONTAL, command=set_vol)
+load_middle_buttons(state['playing'])
+
+bottom_frame = Frame(root)
+bottom_frame.pack(pady=15)
+
+
+vol_btn = Button(bottom_frame, image=mediumPhoto, command=mute)
+vol_btn.grid(row=0, column=0, padx=30)
+
+scale = Scale(bottom_frame, from_=0, to=100, orient=HORIZONTAL, command=set_vol)
 scale.set(50)
 mixer.music.set_volume(.5)
-scale.pack(pady=10)
+scale.grid(row=0, column=1, pady=10)
+
 
 statusbar = Label(root, text="Welcome to the Renewed Hope Devotional Archive Player", relief=SUNKEN, anchor=W)
 statusbar.pack(side=BOTTOM, fill=X)
