@@ -23,7 +23,7 @@ state = {
 root = Tk()
 
 menuBar = Menu(root)
-
+which_theme = "default"
 
 
 # root.config() is adding a configuration option to the root widget.
@@ -165,14 +165,20 @@ def mute():
 middle_frame = Frame(root)
 middle_frame.pack(pady=15)
 
-playPhoto = PhotoImage(file='play.png')
-stopPhoto = PhotoImage(file='stop.png')
-pausePhoto = PhotoImage(file='pause.png')
-backPhoto = PhotoImage(file='back.png')
-mutePhoto = PhotoImage(file='mute.png')
-softPhoto = PhotoImage(file='soft.png')
-mediumPhoto = PhotoImage(file="medium.png")
-loudPhoto = PhotoImage(file='loud.png')
+if which_theme == "default":
+    file_path = Path.cwd() / 'themes' / 'default'
+    print("the file_path var is : " , file_path)
+elif which_theme == "dark":
+    file_path = Path.cwd() / 'themes' / 'dark'
+
+playPhoto = PhotoImage(file=(file_path.joinpath('play.png')))
+stopPhoto = PhotoImage(file=(file_path.joinpath('stop.png')))
+pausePhoto = PhotoImage(file=(file_path.joinpath('pause.png')))
+backPhoto = PhotoImage(file=(file_path.joinpath('back.png')))
+mutePhoto = PhotoImage(file=(file_path.joinpath('mute.png')))
+softPhoto = PhotoImage(file=(file_path.joinpath('soft.png')))
+mediumPhoto = PhotoImage(file=(file_path.joinpath('medium.png')))
+loudPhoto = PhotoImage(file=(file_path.joinpath('loud.png')))
 
 
 def load_middle_buttons(playing):
