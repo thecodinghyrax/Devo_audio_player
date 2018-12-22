@@ -3,6 +3,7 @@ from tkinter import *
 import tkinter.messagebox
 from tkinter import filedialog
 from pygame import mixer
+from pathlib import Path
 
 
 # https://www.flaticon.com/
@@ -14,13 +15,16 @@ state = {
 'paused' : False,
 'playing' : False,
 "muted" : False,
-"previous_vol" : 50
+"previous_vol" : 50,
+"theme" : ["default", "dark"] # The theme list represents folders that contain the differently styled elements TODO
 }
 
 
 root = Tk()
 
 menuBar = Menu(root)
+
+
 
 # root.config() is adding a configuration option to the root widget.
 root.config(menu=menuBar)
