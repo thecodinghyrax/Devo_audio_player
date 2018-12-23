@@ -35,8 +35,10 @@ def pick_theme(theme):
     print("The new theme should be : ", theme)
     with open('pref.ini', 'w') as pref:
         config.write(pref)
-    set_file_path()
-    load_middle_buttons(state['playing'])
+    # load_middle_buttons(state['playing'])
+    tkinter.messagebox.showwarning("Theme now set", "The new theme is now set. "
+                                    "Please close this application and reopen "
+                                    "it to apply the new style!")
 
 
 config = configparser.ConfigParser()
