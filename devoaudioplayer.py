@@ -1,9 +1,11 @@
 import os
+import configparser
 from tkinter import *
 import tkinter.messagebox
 from tkinter import filedialog
 from pygame import mixer
 from pathlib import Path
+from functools import partial
 
 
 # https://www.flaticon.com/
@@ -16,14 +18,38 @@ state = {
 'playing' : False,
 "muted" : False,
 "previous_vol" : 50,
-"theme" : ["default", "dark"] # The theme list represents folders that contain the differently styled elements TODO
 }
+
+# Available themes as counted by each seperate directory in the themes directory
+themes_list = []
+themes_dir_list = [x[0] for x in os.walk('themes')]
+for theme in themes_dir_list:
+    if '\\' in theme:
+        theme = theme.split(os.sep)
+        themes_list.append(theme[1])
+
+# User preferences
+def pick_theme(theme):
+    config = configparser.ConfigParser()
+    config['DEFAULT']['Theme'] = theme
+    print("The new theme should be : ", theme)
+    with open('pref.ini', 'w') as pref:
+        config.write(pref)
+    set_file_path()
+    load_middle_buttons(state['playing'])
+
+
+config = configparser.ConfigParser()
+config.read('pref.ini')
+chosen_theme = config['DEFAULT']['Theme']
+file_path = Path.cwd() / 'themes' / chosen_theme
+
 
 
 root = Tk()
 
 menuBar = Menu(root)
-which_theme = "default"
+
 
 
 # root.config() is adding a configuration option to the root widget.
@@ -48,6 +74,7 @@ subMenu.add_command(label="Open", command=fileOpen)
 subMenu.add_command(label="Exit", command=root.destroy)
 
 
+
 def about():
     tkinter.messagebox.showinfo(
         "Renewed Hope Devotional Archive Player", 
@@ -56,11 +83,18 @@ def about():
         "contact me at renewedhopeguild@gmail.com with any thoughts or "
         "suggestions.")
 
-
 # Create the second subMenu
 subMenu2 = Menu(menuBar, tearoff=0)
-menuBar.add_cascade(label="Help", menu=subMenu2)
-subMenu2.add_command(label="About", command=about)
+menuBar.add_cascade(label="Theme", menu=subMenu2)
+for theme in themes_list:
+    print("Adding %s to subMenu2" % theme)
+    subMenu2.add_command(label=theme, command=partial(pick_theme, theme))
+
+
+# Create the third subMenu
+subMenu3 = Menu(menuBar, tearoff=0)
+menuBar.add_cascade(label="Help", menu=subMenu3)
+subMenu3.add_command(label="About", command=about)
 
 mixer.init()  # initilizing the mixer
 
@@ -161,15 +195,9 @@ def mute():
 
 
 
-
 middle_frame = Frame(root)
 middle_frame.pack(pady=15)
 
-if which_theme == "default":
-    file_path = Path.cwd() / 'themes' / 'default'
-    print("the file_path var is : " , file_path)
-elif which_theme == "dark":
-    file_path = Path.cwd() / 'themes' / 'dark'
 
 playPhoto = PhotoImage(file=(file_path.joinpath('play.png')))
 stopPhoto = PhotoImage(file=(file_path.joinpath('stop.png')))
