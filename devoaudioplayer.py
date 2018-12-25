@@ -31,19 +31,33 @@ for theme in themes_dir_list:
 # User preferences
 def pick_theme(theme):
     config = configparser.ConfigParser()
+    config.read('pref.ini')
     config['DEFAULT']['Theme'] = theme
     print("The new theme should be : ", theme)
     with open('pref.ini', 'w') as pref:
         config.write(pref)
-    # load_middle_buttons(state['playing'])
     tkinter.messagebox.showwarning("Theme now set", "The new theme is now set. "
                                     "Please close this application and reopen "
                                     "it to apply the new style!")
+
+def set_frequency(rate):
+    config = configparser.ConfigParser()
+    config.read('pref.ini')
+    config['AUDIO']['frequency'] = rate
+    new_frequency = config['AUDIO']['frequency']
+    print("The new frecuency should be : ", rate)
+    with open('pref.ini', 'w') as pref:
+        config.write(pref)
+    mixer.quit()
+    mixer.pre_init(frequency=int(new_frequency))
+    mixer.init()  # initilizing the mixer
+    
 
 
 config = configparser.ConfigParser()
 config.read('pref.ini')
 chosen_theme = config['DEFAULT']['Theme']
+chosen_frequency = config['AUDIO']['frequency']
 file_path = Path.cwd() / 'themes' / chosen_theme
 
 
@@ -95,9 +109,18 @@ for theme in themes_list:
 
 # Create the third subMenu
 subMenu3 = Menu(menuBar, tearoff=0)
-menuBar.add_cascade(label="Help", menu=subMenu3)
-subMenu3.add_command(label="About", command=about)
+menuBar.add_cascade(label="Sample Rate", menu=subMenu3)
+subMenu3.add_command(label="22.05 kHz", command=partial(set_frequency, "22050"))
+subMenu3.add_command(label="44.1 kHz", command=partial(set_frequency, "44100"))
+subMenu3.add_command(label="48 kHz", command=partial(set_frequency, "48000"))
+subMenu3.add_command(label="96 kHz", command=partial(set_frequency, "96000"))
 
+# Create the fourth subMenu
+subMenu4 = Menu(menuBar, tearoff=0)
+menuBar.add_cascade(label="Help", menu=subMenu4)
+subMenu4.add_command(label="About", command=about)
+
+mixer.pre_init(frequency=int(chosen_frequency))
 mixer.init()  # initilizing the mixer
 
 root.title("Renewed Hope Devotional Archive Player")
