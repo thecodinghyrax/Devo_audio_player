@@ -1,14 +1,16 @@
 import os
 import configparser
+import time
 from tkinter import *
+import threading
 import tkinter.messagebox
 from tkinter import filedialog
 from pygame import mixer
 from pathlib import Path
 from functools import partial
+from mutagen.mp3 import MP3
 
 
-# https://www.flaticon.com/
 # https://icons8.com/
 
 # Current state
@@ -31,27 +33,38 @@ for theme in themes_dir_list:
 # User preferences
 def pick_theme(theme):
     config = configparser.ConfigParser()
+    config.read('pref.ini')
     config['DEFAULT']['Theme'] = theme
     print("The new theme should be : ", theme)
     with open('pref.ini', 'w') as pref:
         config.write(pref)
-    # load_middle_buttons(state['playing'])
     tkinter.messagebox.showwarning("Theme now set", "The new theme is now set. "
                                     "Please close this application and reopen "
                                     "it to apply the new style!")
 
+def set_frequency(rate):
+    config = configparser.ConfigParser()
+    config.read('pref.ini')
+    config['AUDIO']['frequency'] = rate
+    new_frequency = config['AUDIO']['frequency']
+    print("The new frecuency should be : ", rate)
+    with open('pref.ini', 'w') as pref:
+        config.write(pref)
+    mixer.quit()
+    mixer.pre_init(frequency=int(new_frequency))
+    mixer.init()  # initilizing the mixer
+    
 
 config = configparser.ConfigParser()
 config.read('pref.ini')
 chosen_theme = config['DEFAULT']['Theme']
+chosen_frequency = config['AUDIO']['frequency']
 file_path = Path.cwd() / 'themes' / chosen_theme
-
 
 
 root = Tk()
 
 menuBar = Menu(root)
-
 
 
 # root.config() is adding a configuration option to the root widget.
@@ -75,8 +88,6 @@ def fileOpen():
 subMenu.add_command(label="Open", command=fileOpen)
 subMenu.add_command(label="Exit", command=root.destroy)
 
-
-
 def about():
     tkinter.messagebox.showinfo(
         "Renewed Hope Devotional Archive Player", 
@@ -84,6 +95,7 @@ def about():
         "to the entire devotional archive, right from your computer. You can "
         "contact me at renewedhopeguild@gmail.com with any thoughts or "
         "suggestions.")
+
 
 # Create the second subMenu
 subMenu2 = Menu(menuBar, tearoff=0)
@@ -95,20 +107,69 @@ for theme in themes_list:
 
 # Create the third subMenu
 subMenu3 = Menu(menuBar, tearoff=0)
-menuBar.add_cascade(label="Help", menu=subMenu3)
-subMenu3.add_command(label="About", command=about)
+menuBar.add_cascade(label="Sample Rate", menu=subMenu3)
+subMenu3.add_command(label="22.05 kHz", command=partial(set_frequency, "22050"))
+subMenu3.add_command(label="44.1 kHz", command=partial(set_frequency, "44100"))
+subMenu3.add_command(label="48 kHz", command=partial(set_frequency, "48000"))
+subMenu3.add_command(label="96 kHz", command=partial(set_frequency, "96000"))
 
+# Create the fourth subMenu
+subMenu4 = Menu(menuBar, tearoff=0)
+menuBar.add_cascade(label="Help", menu=subMenu4)
+subMenu4.add_command(label="About", command=about)
+
+mixer.pre_init(frequency=int(chosen_frequency))
 mixer.init()  # initilizing the mixer
 
 root.title("Renewed Hope Devotional Archive Player")
 root.iconbitmap('music.ico')
 
 
-text = Label(root, text="Let's make some noise!")
-text.pack(pady=10)
+file_name_label = Label(root, text="Let's make some noise!")
+file_name_label.pack()
 
+song_length_label = Label(root, text="Total length --:--")
+song_length_label.pack(pady=10)
+
+song_current_time = Label(root, text="Current time --:--")
+song_current_time.pack()
+
+def show_details():
+    if state['file_name'].endswith('mp3'):
+        mp3_file_info = MP3(state['file_name'])
+        total_length = mp3_file_info.info.length
+
+
+    else:
+        sound_obj = mixer.Sound(state['file_name'])
+        total_length = sound_obj.get_length()
+        
+
+    # div mod devides the varable by the supplied amount and returns
+    # the whole number AND the remainder
+    file_name_label['text'] = "Playing" + " - " + os.path.basename(state['file_name'])
+    mins, secs = divmod(total_length, 60)
+    mins = round(mins)
+    secs = round(secs)
+    time_format = '{:02d}:{:02d}'.format(mins, secs)
+    song_length_label['text'] = "Total length " + time_format
+    #start_count(total_length)
+    
+    thread_one = threading.Thread(target=partial(start_count, total_length))
+    thread_one.start()
+
+def start_count(count):
+    while count:
+        mins, secs = divmod(count, 60)
+        mins = round(mins)
+        secs = round(secs)
+        time_format = '{:02d}:{:02d}'.format(mins, secs)
+        song_current_time['text'] = 'Current time ' + time_format
+        time.sleep(1)
+        count -= 1
 
 def play_music():
+    
     try:
         if state['paused']:
             # mixer.music.unpause()
@@ -123,13 +184,15 @@ def play_music():
             statusbar['text'] = "Playing : " + os.path.basename(state['file_name'])
             state['playing'] = True
             load_middle_buttons(state['playing'])
+            show_details()
 
-    except:
+    except Exception as e:
         tkinter.messagebox.showerror(
             "Error", 
             'No file has been selected to play. Click the "File" button at '
             'the top and select "Open" to select a file to play from your '
             'computer.')
+        print(e)
 
 
 def stop_music():
@@ -168,12 +231,7 @@ def set_vol(vol):
     print("state.previous_vol is being set to : ", state['previous_vol'])
     print("The state['muted'] is now: ", state['muted'])
   
-    
 
-
-
-
-# Still flaky when muting. Sorta works now. 
 def mute():
     if state['muted']:
         mixer.music.set_volume(state['previous_vol'])
@@ -196,11 +254,10 @@ def mute():
         vol_btn.configure(image=mutePhoto)
 
 
-
 middle_frame = Frame(root)
 middle_frame.pack(pady=15)
 
-
+# Assign all images
 playPhoto = PhotoImage(file=(file_path.joinpath('play.png')))
 stopPhoto = PhotoImage(file=(file_path.joinpath('stop.png')))
 pausePhoto = PhotoImage(file=(file_path.joinpath('pause.png')))
@@ -224,6 +281,7 @@ def load_middle_buttons(playing):
 
     pause_btn =Button(middle_frame, image=pausePhoto, command=pause_music)
     pause_btn.grid(row=0, column=2, padx=18)
+
 
 load_middle_buttons(state['playing'])
 
