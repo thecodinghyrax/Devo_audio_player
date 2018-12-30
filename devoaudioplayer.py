@@ -20,6 +20,7 @@ state = {
 'playing' : False,
 "muted" : False,
 "previous_vol" : 50,
+"play_list" : []
 }
 
 # Available themes as counted by each seperate directory in the themes directory
@@ -80,9 +81,15 @@ menuBar.add_cascade(label="File", menu=subMenu)
 
 def fileOpen():
     state['file_name'] = filedialog.askopenfilename()
-    play_music()
-    print(state['file_name'])
+    add_to_playlist(state['file_name'])
 
+
+def add_to_playlist(file):
+    file_name = os.path.basename(file)
+    song_list_box.insert(0, file_name)
+    song_list_box.selection_clear(1)
+    song_list_box.selection_set(0)
+    state['play_list'].insert(0, file)
 
 # Add commands to the subMenu
 subMenu.add_command(label="Open", command=fileOpen)
@@ -94,7 +101,7 @@ def about():
         "This app was made by Drew Crawford in 2018 to provide a way to listed "
         "to the entire devotional archive, right from your computer. You can "
         "contact me at renewedhopeguild@gmail.com with any thoughts or "
-        "suggestions.")
+        "suggestions.\nVersion : 1.0")
 
 
 # Create the second subMenu
@@ -127,6 +134,15 @@ root.iconbitmap('music.ico')
 left_frame = Frame(root)
 left_frame.grid(column=0, row=0)
 
+song_list_box = Listbox(left_frame)
+song_list_box.grid(columnspan=2, row=0, padx=30)
+
+add_btn = Button(left_frame, text="Add", command=fileOpen)
+add_btn.grid(column= 0, row=1)
+
+del_btn = Button(left_frame, text="Delete")
+del_btn.grid(column=1, row=1)
+
 right_frame = Frame(root)
 right_frame.grid(column=1, row=0)
 
@@ -139,10 +155,6 @@ song_length_label.grid(pady=10, row=0)
 song_current_time = Label(top_frame, text="Current time --:--")
 song_current_time.grid(row=1)
 
-label1 = Listbox(left_frame)
-label1.insert(0, 'song1')
-label1.insert(1, 'song2')
-label1.grid()
 
 def show_details():
     if state['file_name'].endswith('mp3'):
@@ -193,9 +205,14 @@ def play_music():
             load_middle_buttons(state['playing'])
             statusbar['text'] = "Playing : " + os.path.basename(state['file_name'])
         else:
-            mixer.music.load(state['file_name'])
+            stop_music()
+            time.sleep(1)
+            selected_song = song_list_box.curselection()
+            selected_song_index = int(selected_song[0])
+            mixer.music.load(state['play_list'][selected_song_index])
+            state['file_name'] = state['play_list'][selected_song_index]
             mixer.music.play()
-            statusbar['text'] = "Playing : " + os.path.basename(state['file_name'])
+            statusbar['text'] = "Playing : " + os.path.basename(state['play_list'][selected_song_index])
             state['playing'] = True
             load_middle_buttons(state['playing'])
             show_details()
