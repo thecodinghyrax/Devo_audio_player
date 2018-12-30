@@ -91,6 +91,12 @@ def add_to_playlist(file):
     song_list_box.selection_set(0)
     state['play_list'].insert(0, file)
 
+def delete_song():
+    selected_song = song_list_box.curselection()
+    selected_song_index = int(selected_song[0])
+    state['play_list'].remove(state['play_list'][selected_song_index])
+    song_list_box.delete(selected_song_index)
+
 # Add commands to the subMenu
 subMenu.add_command(label="Open", command=fileOpen)
 subMenu.add_command(label="Exit", command=root.destroy)
@@ -140,7 +146,7 @@ song_list_box.grid(columnspan=2, row=0, padx=30)
 add_btn = Button(left_frame, text="Add", command=fileOpen)
 add_btn.grid(column= 0, row=1)
 
-del_btn = Button(left_frame, text="Delete")
+del_btn = Button(left_frame, text="Delete", command=delete_song)
 del_btn.grid(column=1, row=1)
 
 right_frame = Frame(root)
@@ -189,10 +195,24 @@ def start_count(count):
         if state['paused']:
             continue
         else:
-            time_format = change_time_format(current_time)
-            song_current_time['text'] = 'Current time ' + time_format
-            time.sleep(1)
-            current_time += 1
+            if current_time >= (count - 1):
+                print("The current_time is == count")
+                try:
+                    print("Trying to go to the next song")
+                    current_time = 0
+                    selected_song = song_list_box.curselection()
+                    song_list_box.selection_clear(int(selected_song[0]))
+                    song_list_box.selection_set(int(selected_song[0]) + 1)
+                    print("Just before play, select_song is : ", (int(selected_song[0]) + 1))
+                    play_music()
+                except:
+                    stop_music()
+
+            else:
+                time_format = change_time_format(current_time)
+                song_current_time['text'] = 'Current time ' + time_format
+                time.sleep(1)
+                current_time += 1
 
 def play_music():
     
@@ -209,6 +229,7 @@ def play_music():
             time.sleep(1)
             selected_song = song_list_box.curselection()
             selected_song_index = int(selected_song[0])
+            print("The selected_song_index in the play funciton is : ", selected_song_index)
             mixer.music.load(state['play_list'][selected_song_index])
             state['file_name'] = state['play_list'][selected_song_index]
             mixer.music.play()
