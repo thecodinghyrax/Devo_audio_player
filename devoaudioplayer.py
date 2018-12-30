@@ -124,21 +124,30 @@ mixer.init()  # initilizing the mixer
 root.title("Renewed Hope Devotional Archive Player")
 root.iconbitmap('music.ico')
 
+left_frame = Frame(root)
+left_frame.grid(column=0, row=0)
 
-file_name_label = Label(root, text="Let's make some noise!")
-file_name_label.pack()
+right_frame = Frame(root)
+right_frame.grid(column=1, row=0)
 
-song_length_label = Label(root, text="Total length --:--")
-song_length_label.pack(pady=10)
+top_frame = Frame(right_frame)
+top_frame.grid(row=0)
 
-song_current_time = Label(root, text="Current time --:--")
-song_current_time.pack()
+song_length_label = Label(top_frame, text="Total length --:--")
+song_length_label.grid(pady=10, row=0)
+
+song_current_time = Label(top_frame, text="Current time --:--")
+song_current_time.grid(row=1)
+
+label1 = Listbox(left_frame)
+label1.insert(0, 'song1')
+label1.insert(1, 'song2')
+label1.grid()
 
 def show_details():
     if state['file_name'].endswith('mp3'):
         mp3_file_info = MP3(state['file_name'])
         total_length = mp3_file_info.info.length
-
 
     else:
         sound_obj = mixer.Sound(state['file_name'])
@@ -147,26 +156,31 @@ def show_details():
 
     # div mod devides the varable by the supplied amount and returns
     # the whole number AND the remainder
-    file_name_label['text'] = "Playing" + " - " + os.path.basename(state['file_name'])
-    mins, secs = divmod(total_length, 60)
-    mins = round(mins)
-    secs = round(secs)
-    time_format = '{:02d}:{:02d}'.format(mins, secs)
+    time_format = change_time_format(total_length)
     song_length_label['text'] = "Total length " + time_format
-    #start_count(total_length)
     
     thread_one = threading.Thread(target=partial(start_count, total_length))
     thread_one.start()
 
+def change_time_format(time):
+    '''Converts the supplied time in miliseconds to a min:sec format'''
+    mins, secs = divmod(time, 60)
+    mins = round(mins)
+    secs = round(secs)
+    time_format = '{:02d}:{:02d}'.format(mins, secs)
+    return time_format
+
 def start_count(count):
-    while count:
-        mins, secs = divmod(count, 60)
-        mins = round(mins)
-        secs = round(secs)
-        time_format = '{:02d}:{:02d}'.format(mins, secs)
-        song_current_time['text'] = 'Current time ' + time_format
-        time.sleep(1)
-        count -= 1
+    current_time = 0
+    # get_busy will return False when the music stops playing
+    while current_time <= count and mixer.music.get_busy():
+        if state['paused']:
+            continue
+        else:
+            time_format = change_time_format(current_time)
+            song_current_time['text'] = 'Current time ' + time_format
+            time.sleep(1)
+            current_time += 1
 
 def play_music():
     
@@ -254,8 +268,8 @@ def mute():
         vol_btn.configure(image=mutePhoto)
 
 
-middle_frame = Frame(root)
-middle_frame.pack(pady=15)
+middle_frame = Frame(right_frame)
+middle_frame.grid(pady=15, row=1)
 
 # Assign all images
 playPhoto = PhotoImage(file=(file_path.joinpath('play.png')))
@@ -285,8 +299,8 @@ def load_middle_buttons(playing):
 
 load_middle_buttons(state['playing'])
 
-bottom_frame = Frame(root)
-bottom_frame.pack(pady=15)
+bottom_frame = Frame(right_frame)
+bottom_frame.grid(pady=15, row=2)
 
 
 vol_btn = Button(bottom_frame, image=mediumPhoto, command=mute)
@@ -298,7 +312,14 @@ mixer.music.set_volume(.5)
 scale.grid(row=0, column=1, pady=10)
 
 
-statusbar = Label(root, text="Welcome to the Renewed Hope Devotional Archive Player", relief=SUNKEN, anchor=W)
-statusbar.pack(side=BOTTOM, fill=X)
+statusbar = Label(root, text="Welcome to the Renewed Hope Devotional Archive Player", relief=SUNKEN)
+statusbar.grid(columnspan=2, sticky=EW)
 
+def on_closing():
+    stop_music()
+    root.destroy()
+
+
+
+root.protocol("WM_DELETE_WINDOW", on_closing)
 root.mainloop()
