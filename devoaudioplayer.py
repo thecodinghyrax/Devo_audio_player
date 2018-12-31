@@ -20,7 +20,8 @@ state = {
 'playing' : False,
 "muted" : False,
 "previous_vol" : 50,
-"play_list" : []
+"play_list" : [],
+'frequency' : 44100
 }
 
 # Available themes as counted by each seperate directory in the themes directory
@@ -44,22 +45,17 @@ def pick_theme(theme):
                                     "it to apply the new style!")
 
 def set_frequency(rate):
-    config = configparser.ConfigParser()
-    config.read('pref.ini')
-    config['AUDIO']['frequency'] = rate
-    new_frequency = config['AUDIO']['frequency']
+    state['frequency'] = rate
     print("The new frecuency should be : ", rate)
-    with open('pref.ini', 'w') as pref:
-        config.write(pref)
     mixer.quit()
-    mixer.pre_init(frequency=int(new_frequency))
+    mixer.pre_init(frequency=state['frequency'])
     mixer.init()  # initilizing the mixer
     
 
 config = configparser.ConfigParser()
 config.read('pref.ini')
 chosen_theme = config['DEFAULT']['Theme']
-chosen_frequency = config['AUDIO']['frequency']
+chosen_frequency = state['frequency']
 file_path = Path.cwd() / 'themes' / chosen_theme
 
 
@@ -121,17 +117,17 @@ for theme in themes_list:
 # Create the third subMenu
 subMenu3 = Menu(menuBar, tearoff=0)
 menuBar.add_cascade(label="Sample Rate", menu=subMenu3)
-subMenu3.add_command(label="22.05 kHz", command=partial(set_frequency, "22050"))
-subMenu3.add_command(label="44.1 kHz", command=partial(set_frequency, "44100"))
-subMenu3.add_command(label="48 kHz", command=partial(set_frequency, "48000"))
-subMenu3.add_command(label="96 kHz", command=partial(set_frequency, "96000"))
+subMenu3.add_command(label="22.05 kHz", command=partial(set_frequency, 22050))
+subMenu3.add_command(label="44.1 kHz", command=partial(set_frequency, 44100))
+subMenu3.add_command(label="48 kHz", command=partial(set_frequency, 48000))
+subMenu3.add_command(label="96 kHz", command=partial(set_frequency, 96000))
 
 # Create the fourth subMenu
 subMenu4 = Menu(menuBar, tearoff=0)
 menuBar.add_cascade(label="Help", menu=subMenu4)
 subMenu4.add_command(label="About", command=about)
 
-mixer.pre_init(frequency=int(chosen_frequency))
+mixer.pre_init(frequency=chosen_frequency)
 mixer.init()  # initilizing the mixer
 
 root.title("Renewed Hope Devotional Archive Player")
@@ -166,14 +162,11 @@ def show_details():
     if state['file_name'].endswith('mp3'):
         mp3_file_info = MP3(state['file_name'])
         total_length = mp3_file_info.info.length
-
+        
     else:
         sound_obj = mixer.Sound(state['file_name'])
         total_length = sound_obj.get_length()
         
-
-    # div mod devides the varable by the supplied amount and returns
-    # the whole number AND the remainder
     time_format = change_time_format(total_length)
     song_length_label['text'] = "Total length " + time_format
     
@@ -229,9 +222,18 @@ def play_music():
             time.sleep(1)
             selected_song = song_list_box.curselection()
             selected_song_index = int(selected_song[0])
-            print("The selected_song_index in the play funciton is : ", selected_song_index)
             mixer.music.load(state['play_list'][selected_song_index])
             state['file_name'] = state['play_list'][selected_song_index]
+
+            if state['file_name'].endswith('mp3'):
+                mp3_file_info = MP3(state['file_name'])
+                sample_rate = mp3_file_info.info.sample_rate
+                if sample_rate == state['frequency']:
+                    pass
+                else:
+                    set_frequency(sample_rate)
+                    mixer.music.load(state['play_list'][selected_song_index])
+                    
             mixer.music.play()
             statusbar['text'] = "Playing : " + os.path.basename(state['play_list'][selected_song_index])
             state['playing'] = True
