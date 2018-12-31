@@ -181,6 +181,7 @@ def change_time_format(time):
     time_format = '{:02d}:{:02d}'.format(mins, secs)
     return time_format
 
+
 def start_count(count):
     current_time = 0
     # get_busy will return False when the music stops playing
@@ -206,6 +207,7 @@ def start_count(count):
                 song_current_time['text'] = 'Current time ' + time_format
                 time.sleep(1)
                 current_time += 1
+
 
 def play_music():
     
@@ -233,7 +235,7 @@ def play_music():
                 else:
                     set_frequency(sample_rate)
                     mixer.music.load(state['play_list'][selected_song_index])
-                    
+
             mixer.music.play()
             statusbar['text'] = "Playing : " + os.path.basename(state['play_list'][selected_song_index])
             state['playing'] = True
