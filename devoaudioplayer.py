@@ -47,32 +47,6 @@ def set_frequency(rate):
     mixer.init()  # initilizing the mixer
     
 
-config = configparser.ConfigParser()
-config.read('pref.ini')
-chosen_theme = config['DEFAULT']['Theme']
-chosen_frequency = state['frequency']
-file_path = Path.cwd() / 'themes' / chosen_theme
-
-
-root = tk.ThemedTk()
-root.get_themes()
-root.set_theme(chosen_theme)
-root.title("Renewed Hope Devotional Archive Player")
-root.iconbitmap('music.ico')
-
-
-menuBar = Menu(root)
-
-
-# root.config() is adding a configuration option to the root widget.
-root.config(menu=menuBar)
-
-# create the first sub menu
-subMenu = Menu(menuBar, tearoff=0)
-# Add the submenu to the menuBar
-menuBar.add_cascade(label="File", menu=subMenu)
-
-
 def fileOpen():
     state['file_name'] = filedialog.askopenfilename()
     add_to_playlist(state['file_name'])
@@ -100,59 +74,6 @@ def about():
         "to the entire devotional archive, right from your computer. You can "
         "contact me at renewedhopeguild@gmail.com with any thoughts or "
         "suggestions.\nVersion : 1.0")
-
-
-# Add commands to the subMenu
-subMenu.add_command(label="Open", command=fileOpen)
-subMenu.add_command(label="Exit", command=root.destroy)
-
-# Create the second subMenu
-subMenu2 = Menu(menuBar, tearoff=0)
-menuBar.add_cascade(label="Theme", menu=subMenu2)
-subMenu2.add_command(label='Plastik', command=partial(pick_theme, 'plastik'))
-subMenu2.add_command(label="Clear looks", command=partial(pick_theme, 'clearlooks'))
-subMenu2.add_command(label="Elegance", command=partial(pick_theme, 'elegance'))
-
-# Create the third subMenu
-subMenu3 = Menu(menuBar, tearoff=0)
-menuBar.add_cascade(label="Sample Rate", menu=subMenu3)
-subMenu3.add_command(label="22.05 kHz", command=partial(set_frequency, 22050))
-subMenu3.add_command(label="44.1 kHz", command=partial(set_frequency, 44100))
-subMenu3.add_command(label="48 kHz", command=partial(set_frequency, 48000))
-subMenu3.add_command(label="96 kHz", command=partial(set_frequency, 96000))
-
-# Create the fourth subMenu
-subMenu4 = Menu(menuBar, tearoff=0)
-menuBar.add_cascade(label="Help", menu=subMenu4)
-subMenu4.add_command(label="About", command=about)
-
-# initilizing the mixer
-mixer.pre_init(frequency=chosen_frequency)
-mixer.init()  
-
-left_frame = Frame(root)
-left_frame.grid(column=0, row=0)
-
-song_list_box = Listbox(left_frame)
-song_list_box.grid(columnspan=2, row=0, padx=30)
-
-add_btn = ttk.Button(left_frame, text="Add", command=fileOpen)
-add_btn.grid(column= 0, row=1)
-
-del_btn = ttk.Button(left_frame, text="Delete", command=delete_song)
-del_btn.grid(column=1, row=1)
-
-right_frame = Frame(root)
-right_frame.grid(column=1, row=0)
-
-top_frame = Frame(right_frame)
-top_frame.grid(row=0)
-
-song_length_label = ttk.Label(top_frame, text="Total length --:--", font='helvetica 12')
-song_length_label.grid(pady=10, row=0)
-
-song_current_time = ttk.Label(top_frame, text="Current time --:--", font='helvetica 12')
-song_current_time.grid(row=1)
 
 
 def show_details():
@@ -304,20 +225,6 @@ def mute():
         vol_btn.configure(image=mutePhoto)
 
 
-middle_frame = Frame(right_frame)
-middle_frame.grid(pady=15, row=1)
-
-# Assign all images
-playPhoto = PhotoImage(file=(file_path.joinpath('play.png')))
-stopPhoto = PhotoImage(file=(file_path.joinpath('stop.png')))
-pausePhoto = PhotoImage(file=(file_path.joinpath('pause.png')))
-backPhoto = PhotoImage(file=(file_path.joinpath('back.png')))
-mutePhoto = PhotoImage(file=(file_path.joinpath('mute.png')))
-softPhoto = PhotoImage(file=(file_path.joinpath('soft.png')))
-mediumPhoto = PhotoImage(file=(file_path.joinpath('medium.png')))
-loudPhoto = PhotoImage(file=(file_path.joinpath('loud.png')))
-
-
 def load_middle_buttons(playing):
     if playing:
         backBtn = ttk.Button(middle_frame, image=backPhoto, command=play_music)
@@ -333,11 +240,105 @@ def load_middle_buttons(playing):
     pause_btn.grid(row=0, column=2, padx=18)
 
 
+def on_closing():
+    stop_music()
+    root.destroy()
+
+# Loading the user preferences
+config = configparser.ConfigParser()
+config.read('pref.ini')
+chosen_theme = config['DEFAULT']['Theme']
+chosen_frequency = state['frequency']
+file_path = Path.cwd() / 'themes' / chosen_theme
+
+# Creating the root window
+root = tk.ThemedTk()
+root.get_themes()
+root.set_theme(chosen_theme)
+root.title("Renewed Hope Devotional Archive Player")
+root.iconbitmap('music.ico')
+
+# Assign all images
+playPhoto = PhotoImage(file=(file_path.joinpath('play.png')))
+stopPhoto = PhotoImage(file=(file_path.joinpath('stop.png')))
+pausePhoto = PhotoImage(file=(file_path.joinpath('pause.png')))
+backPhoto = PhotoImage(file=(file_path.joinpath('back.png')))
+mutePhoto = PhotoImage(file=(file_path.joinpath('mute.png')))
+softPhoto = PhotoImage(file=(file_path.joinpath('soft.png')))
+mediumPhoto = PhotoImage(file=(file_path.joinpath('medium.png')))
+loudPhoto = PhotoImage(file=(file_path.joinpath('loud.png')))
+
+# Creating the menubar and adding it to the root window
+menuBar = Menu(root)
+root.config(menu=menuBar)
+
+# create the first sub menu
+subMenu = Menu(menuBar, tearoff=0)
+menuBar.add_cascade(label="File", menu=subMenu)
+
+subMenu.add_command(label="Open", command=fileOpen)
+subMenu.add_command(label="Exit", command=root.destroy)
+
+# Create the second subMenu
+subMenu2 = Menu(menuBar, tearoff=0)
+menuBar.add_cascade(label="Theme", menu=subMenu2)
+
+subMenu2.add_command(label='Plastik', command=partial(pick_theme, 'plastik'))
+subMenu2.add_command(label="Clear looks", command=partial(pick_theme, 'clearlooks'))
+subMenu2.add_command(label="Elegance", command=partial(pick_theme, 'elegance'))
+
+# Create the third subMenu
+subMenu3 = Menu(menuBar, tearoff=0)
+menuBar.add_cascade(label="Sample Rate", menu=subMenu3)
+
+subMenu3.add_command(label="22.05 kHz", command=partial(set_frequency, 22050))
+subMenu3.add_command(label="44.1 kHz", command=partial(set_frequency, 44100))
+subMenu3.add_command(label="48 kHz", command=partial(set_frequency, 48000))
+subMenu3.add_command(label="96 kHz", command=partial(set_frequency, 96000))
+
+# Create the fourth subMenu
+subMenu4 = Menu(menuBar, tearoff=0)
+menuBar.add_cascade(label="Help", menu=subMenu4)
+
+subMenu4.add_command(label="About", command=about)
+
+# initilizing the mixer
+mixer.pre_init(frequency=chosen_frequency)
+mixer.init()  
+
+# ============ Creating the left frame =================
+left_frame = Frame(root)
+left_frame.grid(column=0, row=0)
+
+song_list_box = Listbox(left_frame)
+song_list_box.grid(columnspan=2, row=0, padx=30)
+
+add_btn = ttk.Button(left_frame, text="Add", command=fileOpen)
+add_btn.grid(column= 0, row=1)
+
+del_btn = ttk.Button(left_frame, text="Delete", command=delete_song)
+del_btn.grid(column=1, row=1)
+
+# ============ Creating the right frame =================
+right_frame = Frame(root)
+right_frame.grid(column=1, row=0)
+
+top_frame = Frame(right_frame)
+top_frame.grid(row=0)
+
+song_length_label = ttk.Label(top_frame, text="Total length --:--", font='helvetica 12')
+song_length_label.grid(pady=10, row=0)
+
+song_current_time = ttk.Label(top_frame, text="Current time --:--", font='helvetica 12')
+song_current_time.grid(row=1)
+
+middle_frame = Frame(right_frame)
+middle_frame.grid(pady=15, row=1)
+
 load_middle_buttons(state['playing'])
 
 bottom_frame = Frame(right_frame)
 bottom_frame.grid(pady=15, row=2)
-
 
 vol_btn = ttk.Button(bottom_frame, image=mediumPhoto, command=mute)
 vol_btn.grid(row=0, column=0, padx=30)
@@ -347,14 +348,10 @@ scale.set(50)
 mixer.music.set_volume(.5)
 scale.grid(row=0, column=1, pady=10)
 
-
+# ============ Creating the bottom status bar =================
 statusbar = ttk.Label(root, text="Welcome to the Renewed Hope Devotional Archive Player", relief=SUNKEN, font='helvetica 12')
 statusbar.grid(columnspan=2, sticky=EW)
 
-def on_closing():
-    stop_music()
-    root.destroy()
-
-
+# Changing the close window functionality 
 root.protocol("WM_DELETE_WINDOW", on_closing)
 root.mainloop()
