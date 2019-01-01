@@ -57,6 +57,9 @@ file_path = Path.cwd() / 'themes' / chosen_theme
 root = tk.ThemedTk()
 root.get_themes()
 root.set_theme(chosen_theme)
+root.title("Renewed Hope Devotional Archive Player")
+root.iconbitmap('music.ico')
+
 
 menuBar = Menu(root)
 
@@ -90,19 +93,18 @@ def delete_song():
     song_list_box.delete(selected_song_index)
 
 
-# Add commands to the subMenu
-subMenu.add_command(label="Open", command=fileOpen)
-subMenu.add_command(label="Exit", command=root.destroy)
-
-
 def about():
     tkinter.messagebox.showinfo(
         "Renewed Hope Devotional Archive Player", 
-        "This app was made by Drew Crawford in 2018 to provide a way to listed "
+        "This app was made by Drew Crawford in 2018 to provide a way to listen "
         "to the entire devotional archive, right from your computer. You can "
         "contact me at renewedhopeguild@gmail.com with any thoughts or "
         "suggestions.\nVersion : 1.0")
 
+
+# Add commands to the subMenu
+subMenu.add_command(label="Open", command=fileOpen)
+subMenu.add_command(label="Exit", command=root.destroy)
 
 # Create the second subMenu
 subMenu2 = Menu(menuBar, tearoff=0)
@@ -110,8 +112,6 @@ menuBar.add_cascade(label="Theme", menu=subMenu2)
 subMenu2.add_command(label='Plastik', command=partial(pick_theme, 'plastik'))
 subMenu2.add_command(label="Clear looks", command=partial(pick_theme, 'clearlooks'))
 subMenu2.add_command(label="Elegance", command=partial(pick_theme, 'elegance'))
-
-
 
 # Create the third subMenu
 subMenu3 = Menu(menuBar, tearoff=0)
@@ -126,11 +126,9 @@ subMenu4 = Menu(menuBar, tearoff=0)
 menuBar.add_cascade(label="Help", menu=subMenu4)
 subMenu4.add_command(label="About", command=about)
 
+# initilizing the mixer
 mixer.pre_init(frequency=chosen_frequency)
-mixer.init()  # initilizing the mixer
-
-root.title("Renewed Hope Devotional Archive Player")
-root.iconbitmap('music.ico')
+mixer.init()  
 
 left_frame = Frame(root)
 left_frame.grid(column=0, row=0)
