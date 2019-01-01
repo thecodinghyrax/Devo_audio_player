@@ -6,6 +6,7 @@ import threading
 import tkinter.messagebox
 from tkinter import filedialog
 from tkinter import ttk
+from ttkthemes import themed_tk as tk
 from pygame import mixer
 from pathlib import Path
 from functools import partial
@@ -25,25 +26,18 @@ state = {
 'frequency' : 44100
 }
 
-# Available themes as counted by each seperate directory in the themes directory
-themes_list = []
-themes_dir_list = [x[0] for x in os.walk('themes')]
-for theme in themes_dir_list:
-    if '\\' in theme:
-        theme = theme.split(os.sep)
-        themes_list.append(theme[1])
 
-# User preferences
 def pick_theme(theme):
     config = configparser.ConfigParser()
     config.read('pref.ini')
     config['DEFAULT']['Theme'] = theme
-    print("The new theme should be : ", theme)
     with open('pref.ini', 'w') as pref:
         config.write(pref)
     tkinter.messagebox.showwarning("Theme now set", "The new theme is now set. "
                                     "Please close this application and reopen "
                                     "it to apply the new style!")
+    on_closing()
+
 
 def set_frequency(rate):
     state['frequency'] = rate
@@ -60,7 +54,9 @@ chosen_frequency = state['frequency']
 file_path = Path.cwd() / 'themes' / chosen_theme
 
 
-root = Tk()
+root = tk.ThemedTk()
+root.get_themes()
+root.set_theme(chosen_theme)
 
 menuBar = Menu(root)
 
@@ -69,8 +65,6 @@ menuBar = Menu(root)
 root.config(menu=menuBar)
 
 # create the first sub menu
-# tearoff=0 removes a dash line that shows up in the subMenu 
-# (Used for poping out the subMenu I think)
 subMenu = Menu(menuBar, tearoff=0)
 # Add the submenu to the menuBar
 menuBar.add_cascade(label="File", menu=subMenu)
@@ -88,15 +82,18 @@ def add_to_playlist(file):
     song_list_box.selection_set(0)
     state['play_list'].append(file)
 
+
 def delete_song():
     selected_song = song_list_box.curselection()
     selected_song_index = int(selected_song[0])
     state['play_list'].remove(state['play_list'][selected_song_index])
     song_list_box.delete(selected_song_index)
 
+
 # Add commands to the subMenu
 subMenu.add_command(label="Open", command=fileOpen)
 subMenu.add_command(label="Exit", command=root.destroy)
+
 
 def about():
     tkinter.messagebox.showinfo(
@@ -110,9 +107,10 @@ def about():
 # Create the second subMenu
 subMenu2 = Menu(menuBar, tearoff=0)
 menuBar.add_cascade(label="Theme", menu=subMenu2)
-for theme in themes_list:
-    print("Adding %s to subMenu2" % theme)
-    subMenu2.add_command(label=theme, command=partial(pick_theme, theme))
+subMenu2.add_command(label='Plastik', command=partial(pick_theme, 'plastik'))
+subMenu2.add_command(label="Clear looks", command=partial(pick_theme, 'clearlooks'))
+subMenu2.add_command(label="Elegance", command=partial(pick_theme, 'elegance'))
+
 
 
 # Create the third subMenu
@@ -173,6 +171,7 @@ def show_details():
     
     thread_one = threading.Thread(target=partial(start_count, total_length))
     thread_one.start()
+
 
 def change_time_format(time):
     '''Converts the supplied time in miliseconds to a min:sec format'''
@@ -273,9 +272,9 @@ def pause_music():
 
 
 def set_vol(vol):
-    mixer.music.set_volume(int(vol) * .01)
+    mixer.music.set_volume(float(vol) * .01)
     if not state['muted']:
-        state['previous_vol'] = (int(vol) * .01) 
+        state['previous_vol'] = (float(vol) * .01) 
 
     if mixer.music.get_volume() == 0:
         vol_btn.configure(image=mutePhoto)
@@ -285,8 +284,6 @@ def set_vol(vol):
         vol_btn.configure(image=mediumPhoto)
     else:
         vol_btn.configure(image=loudPhoto)
-    print("state.previous_vol is being set to : ", state['previous_vol'])
-    print("The state['muted'] is now: ", state['muted'])
   
 
 def mute():
@@ -305,9 +302,7 @@ def mute():
     else:
         mixer.music.set_volume(0)
         state['muted'] = True
-        print("state of previous vol is : ", state['previous_vol'])
         scale.set(0)
-        print("state of previous vol after scale.set is : ", state['previous_vol'])
         vol_btn.configure(image=mutePhoto)
 
 
@@ -349,7 +344,7 @@ bottom_frame.grid(pady=15, row=2)
 vol_btn = ttk.Button(bottom_frame, image=mediumPhoto, command=mute)
 vol_btn.grid(row=0, column=0, padx=30)
 
-scale = Scale(bottom_frame, from_=0, to=100, orient=HORIZONTAL, command=set_vol, font='helvetica 12')
+scale = ttk.Scale(bottom_frame, from_=0, to=100, orient=HORIZONTAL, command=set_vol)
 scale.set(50)
 mixer.music.set_volume(.5)
 scale.grid(row=0, column=1, pady=10)
@@ -361,7 +356,6 @@ statusbar.grid(columnspan=2, sticky=EW)
 def on_closing():
     stop_music()
     root.destroy()
-
 
 
 root.protocol("WM_DELETE_WINDOW", on_closing)
