@@ -5,6 +5,7 @@ from tkinter import *
 import threading
 import tkinter.messagebox
 from tkinter import filedialog
+from tkinter import ttk
 from pygame import mixer
 from pathlib import Path
 from functools import partial
@@ -82,10 +83,10 @@ def fileOpen():
 
 def add_to_playlist(file):
     file_name = os.path.basename(file)
-    song_list_box.insert(0, file_name)
+    song_list_box.insert(END, file_name)
     song_list_box.selection_clear(1)
     song_list_box.selection_set(0)
-    state['play_list'].insert(0, file)
+    state['play_list'].append(file)
 
 def delete_song():
     selected_song = song_list_box.curselection()
@@ -139,10 +140,10 @@ left_frame.grid(column=0, row=0)
 song_list_box = Listbox(left_frame)
 song_list_box.grid(columnspan=2, row=0, padx=30)
 
-add_btn = Button(left_frame, text="Add", command=fileOpen)
+add_btn = ttk.Button(left_frame, text="Add", command=fileOpen)
 add_btn.grid(column= 0, row=1)
 
-del_btn = Button(left_frame, text="Delete", command=delete_song)
+del_btn = ttk.Button(left_frame, text="Delete", command=delete_song)
 del_btn.grid(column=1, row=1)
 
 right_frame = Frame(root)
@@ -151,10 +152,10 @@ right_frame.grid(column=1, row=0)
 top_frame = Frame(right_frame)
 top_frame.grid(row=0)
 
-song_length_label = Label(top_frame, text="Total length --:--")
+song_length_label = ttk.Label(top_frame, text="Total length --:--", font='helvetica 12')
 song_length_label.grid(pady=10, row=0)
 
-song_current_time = Label(top_frame, text="Current time --:--")
+song_current_time = ttk.Label(top_frame, text="Current time --:--", font='helvetica 12')
 song_current_time.grid(row=1)
 
 
@@ -180,6 +181,7 @@ def change_time_format(time):
     secs = round(secs)
     time_format = '{:02d}:{:02d}'.format(mins, secs)
     return time_format
+
 
 def start_count(count):
     current_time = 0
@@ -207,6 +209,7 @@ def start_count(count):
                 time.sleep(1)
                 current_time += 1
 
+
 def play_music():
     
     try:
@@ -233,7 +236,7 @@ def play_music():
                 else:
                     set_frequency(sample_rate)
                     mixer.music.load(state['play_list'][selected_song_index])
-                    
+
             mixer.music.play()
             statusbar['text'] = "Playing : " + os.path.basename(state['play_list'][selected_song_index])
             state['playing'] = True
@@ -324,16 +327,16 @@ loudPhoto = PhotoImage(file=(file_path.joinpath('loud.png')))
 
 def load_middle_buttons(playing):
     if playing:
-        backBtn = Button(middle_frame, image=backPhoto, command=play_music)
+        backBtn = ttk.Button(middle_frame, image=backPhoto, command=play_music)
         backBtn.grid(row=0, column=0, padx=18)
     else:
-        playBtn = Button(middle_frame, image=playPhoto, command=play_music)
+        playBtn = ttk.Button(middle_frame, image=playPhoto, command=play_music)
         playBtn.grid(row=0, column=0, padx=18)
 
-    stopBtn = Button(middle_frame, image=stopPhoto, command=stop_music)
+    stopBtn = ttk.Button(middle_frame, image=stopPhoto, command=stop_music)
     stopBtn.grid(row=0, column=1, padx=18)
 
-    pause_btn =Button(middle_frame, image=pausePhoto, command=pause_music)
+    pause_btn =ttk.Button(middle_frame, image=pausePhoto, command=pause_music)
     pause_btn.grid(row=0, column=2, padx=18)
 
 
@@ -343,16 +346,16 @@ bottom_frame = Frame(right_frame)
 bottom_frame.grid(pady=15, row=2)
 
 
-vol_btn = Button(bottom_frame, image=mediumPhoto, command=mute)
+vol_btn = ttk.Button(bottom_frame, image=mediumPhoto, command=mute)
 vol_btn.grid(row=0, column=0, padx=30)
 
-scale = Scale(bottom_frame, from_=0, to=100, orient=HORIZONTAL, command=set_vol)
+scale = Scale(bottom_frame, from_=0, to=100, orient=HORIZONTAL, command=set_vol, font='helvetica 12')
 scale.set(50)
 mixer.music.set_volume(.5)
 scale.grid(row=0, column=1, pady=10)
 
 
-statusbar = Label(root, text="Welcome to the Renewed Hope Devotional Archive Player", relief=SUNKEN)
+statusbar = ttk.Label(root, text="Welcome to the Renewed Hope Devotional Archive Player", relief=SUNKEN, font='helvetica 12')
 statusbar.grid(columnspan=2, sticky=EW)
 
 def on_closing():
