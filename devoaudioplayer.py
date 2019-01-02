@@ -17,12 +17,12 @@ from mutagen.mp3 import MP3
 
 # Current state
 state = {
-"file_name" : '', 
+'file_name' : '', 
 'paused' : False,
 'playing' : False,
-"muted" : False,
-"previous_vol" : 50,
-"play_list" : [],
+'muted' : False,
+'previous_vol' : 50,
+'play_list' : [],
 'frequency' : 44100
 }
 
@@ -33,15 +33,15 @@ def pick_theme(theme):
     config['DEFAULT']['Theme'] = theme
     with open('pref.ini', 'w') as pref:
         config.write(pref)
-    tkinter.messagebox.showwarning("Theme now set", "The new theme is now set. "
-                                    "Please close this application and reopen "
-                                    "it to apply the new style!")
+    tkinter.messagebox.showwarning('Theme now set', 'The new theme is now set. '
+                                    'Please close this application and reopen '
+                                    'it to apply the new style!')
     on_closing()
 
 
 def set_frequency(rate):
     state['frequency'] = rate
-    print("The new frecuency should be : ", rate)
+    print('The new frecuency should be : ', rate)
     mixer.quit()
     mixer.pre_init(frequency=state['frequency'])
     mixer.init()  # initilizing the mixer
@@ -69,11 +69,11 @@ def delete_song():
 
 def about():
     tkinter.messagebox.showinfo(
-        "Renewed Hope Devotional Archive Player", 
-        "This app was made by Drew Crawford in 2018 to provide a way to listen "
-        "to the entire devotional archive, right from your computer. You can "
-        "contact me at renewedhopeguild@gmail.com with any thoughts or "
-        "suggestions.\nVersion : 1.0")
+        'Renewed Hope Devotional Archive Player', 
+        'This app was made by Drew Crawford in 2018 to provide a way to listen '
+        'to the entire devotional archive, right from your computer. You can '
+        'contact me at renewedhopeguild@gmail.com with any thoughts or '
+        'suggestions.\nVersion : 1.0')
 
 
 def show_details():
@@ -86,7 +86,7 @@ def show_details():
         total_length = sound_obj.get_length()
         
     time_format = change_time_format(total_length)
-    song_length_label['text'] = "Total length " + time_format
+    song_length_label['text'] = 'Total length ' + time_format
     
     thread_one = threading.Thread(target=partial(start_count, total_length))
     thread_one.start()
@@ -109,14 +109,14 @@ def start_count(count):
             continue
         else:
             if current_time >= (count - 1):
-                print("The current_time is == count")
+                print('The current_time is == count')
                 try:
-                    print("Trying to go to the next song")
+                    print('Trying to go to the next song')
                     current_time = 0
                     selected_song = song_list_box.curselection()
                     song_list_box.selection_clear(int(selected_song[0]))
                     song_list_box.selection_set(int(selected_song[0]) + 1)
-                    print("Just before play, select_song is : ", (int(selected_song[0]) + 1))
+                    print('Just before play, select_song is : ', (int(selected_song[0]) + 1))
                     play_music()
                 except:
                     stop_music()
@@ -137,7 +137,7 @@ def play_music():
             state['playing'] = True
             mixer.music.play()
             load_middle_buttons(state['playing'])
-            statusbar['text'] = "Playing : " + os.path.basename(state['file_name'])
+            statusbar['text'] = 'Playing : ' + os.path.basename(state['file_name'])
         else:
             stop_music()
             time.sleep(1)
@@ -156,14 +156,14 @@ def play_music():
                     mixer.music.load(state['play_list'][selected_song_index])
 
             mixer.music.play()
-            statusbar['text'] = "Playing : " + os.path.basename(state['play_list'][selected_song_index])
+            statusbar['text'] = 'Playing : ' + os.path.basename(state['play_list'][selected_song_index])
             state['playing'] = True
             load_middle_buttons(state['playing'])
             show_details()
 
     except Exception as e:
         tkinter.messagebox.showerror(
-            "Error", 
+            'Error', 
             'No file has been selected to play. Click the "File" button at '
             'the top and select "Open" to select a file to play from your '
             'computer.')
@@ -172,7 +172,7 @@ def play_music():
 
 def stop_music():
     mixer.music.stop()
-    statusbar['text'] = "Stopped"
+    statusbar['text'] = 'Stopped'
     state['playing'] = False
     load_middle_buttons(state['playing'])
 
@@ -183,10 +183,10 @@ def pause_music():
     elif state['paused']:
         mixer.music.unpause()
         state['paused'] = False
-        statusbar['text'] = "Playing : " + os.path.basename(state['file_name'])
+        statusbar['text'] = 'Playing : ' + os.path.basename(state['file_name'])
     else:
         mixer.music.pause()
-        statusbar['text'] = "Paused"
+        statusbar['text'] = 'Paused'
         state['paused'] = True
 
 
@@ -255,7 +255,7 @@ file_path = Path.cwd() / 'themes' / chosen_theme
 root = tk.ThemedTk()
 root.get_themes()
 root.set_theme(chosen_theme)
-root.title("Renewed Hope Devotional Archive Player")
+root.title('Renewed Hope Devotional Archive Player')
 root.iconbitmap('music.ico')
 
 # Assign all images
@@ -274,33 +274,33 @@ root.config(menu=menuBar)
 
 # create the first sub menu
 subMenu = Menu(menuBar, tearoff=0)
-menuBar.add_cascade(label="File", menu=subMenu)
+menuBar.add_cascade(label='File', menu=subMenu)
 
-subMenu.add_command(label="Open", command=fileOpen)
-subMenu.add_command(label="Exit", command=root.destroy)
+subMenu.add_command(label='Open', command=fileOpen)
+subMenu.add_command(label='Exit', command=root.destroy)
 
 # Create the second subMenu
 subMenu2 = Menu(menuBar, tearoff=0)
-menuBar.add_cascade(label="Theme", menu=subMenu2)
+menuBar.add_cascade(label='Theme', menu=subMenu2)
 
 subMenu2.add_command(label='Plastik', command=partial(pick_theme, 'plastik'))
-subMenu2.add_command(label="Clear looks", command=partial(pick_theme, 'clearlooks'))
-subMenu2.add_command(label="Elegance", command=partial(pick_theme, 'elegance'))
+subMenu2.add_command(label='Clear looks', command=partial(pick_theme, 'clearlooks'))
+subMenu2.add_command(label='Elegance', command=partial(pick_theme, 'elegance'))
 
 # Create the third subMenu
 subMenu3 = Menu(menuBar, tearoff=0)
-menuBar.add_cascade(label="Sample Rate", menu=subMenu3)
+menuBar.add_cascade(label='Sample Rate', menu=subMenu3)
 
-subMenu3.add_command(label="22.05 kHz", command=partial(set_frequency, 22050))
-subMenu3.add_command(label="44.1 kHz", command=partial(set_frequency, 44100))
-subMenu3.add_command(label="48 kHz", command=partial(set_frequency, 48000))
-subMenu3.add_command(label="96 kHz", command=partial(set_frequency, 96000))
+subMenu3.add_command(label='22.05 kHz', command=partial(set_frequency, 22050))
+subMenu3.add_command(label='44.1 kHz', command=partial(set_frequency, 44100))
+subMenu3.add_command(label='48 kHz', command=partial(set_frequency, 48000))
+subMenu3.add_command(label='96 kHz', command=partial(set_frequency, 96000))
 
 # Create the fourth subMenu
 subMenu4 = Menu(menuBar, tearoff=0)
-menuBar.add_cascade(label="Help", menu=subMenu4)
+menuBar.add_cascade(label='Help', menu=subMenu4)
 
-subMenu4.add_command(label="About", command=about)
+subMenu4.add_command(label='About', command=about)
 
 # initilizing the mixer
 mixer.pre_init(frequency=chosen_frequency)
@@ -313,10 +313,10 @@ left_frame.grid(column=0, row=0)
 song_list_box = Listbox(left_frame)
 song_list_box.grid(columnspan=2, row=0, padx=30)
 
-add_btn = ttk.Button(left_frame, text="Add", command=fileOpen)
+add_btn = ttk.Button(left_frame, text='Add', command=fileOpen)
 add_btn.grid(column= 0, row=1)
 
-del_btn = ttk.Button(left_frame, text="Delete", command=delete_song)
+del_btn = ttk.Button(left_frame, text='Delete', command=delete_song)
 del_btn.grid(column=1, row=1)
 
 # ============ Creating the right frame =================
@@ -326,10 +326,10 @@ right_frame.grid(column=1, row=0)
 top_frame = Frame(right_frame)
 top_frame.grid(row=0)
 
-song_length_label = ttk.Label(top_frame, text="Total length --:--", font='helvetica 12')
+song_length_label = ttk.Label(top_frame, text='Total length --:--', font='helvetica 12')
 song_length_label.grid(pady=10, row=0)
 
-song_current_time = ttk.Label(top_frame, text="Current time --:--", font='helvetica 12')
+song_current_time = ttk.Label(top_frame, text='Current time --:--', font='helvetica 12')
 song_current_time.grid(row=1)
 
 middle_frame = Frame(right_frame)
@@ -349,9 +349,9 @@ mixer.music.set_volume(.5)
 scale.grid(row=0, column=1, pady=10)
 
 # ============ Creating the bottom status bar =================
-statusbar = ttk.Label(root, text="Welcome to the Renewed Hope Devotional Archive Player", relief=SUNKEN, font='helvetica 12')
+statusbar = ttk.Label(root, text='Welcome to the Renewed Hope Devotional Archive Player', relief=SUNKEN, font='helvetica 12')
 statusbar.grid(columnspan=2, sticky=EW)
 
 # Changing the close window functionality 
-root.protocol("WM_DELETE_WINDOW", on_closing)
+root.protocol('WM_DELETE_WINDOW', on_closing)
 root.mainloop()
